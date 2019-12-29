@@ -1,32 +1,45 @@
-#import <SpringBoard/SpringBoard.h>
+#include <SpringBoard/SpringBoard.h>
 
 @interface SBBrightnessController : NSObject
 	+(id)sharedBrightnessController;
 	-(void)setBrightnessLevel:(float)arg1;
 @end
-
-@interface SBApplication : NSObject
-	-(NSString *)bundleIdentifier;
+@interface CAMViewfinderViewController : UIViewController
 @end
 
-// The brightness level before setting it to 1.0
+// The stored brightness level before setting it to 1.0
 static double brightnessLevel;
-// The bundle identifier of the previously shown application
-static NSString* prevBundle;
 
-// This hook makes the tweak work on the SpringBoard version of the camera
-%hook SpringBoard 
+%hook CAMViewfinderViewController
 
--(void)frontDisplayDidChange:(id)application {
+-(void)viewDidAppear:(BOOL)arg1 {
 	%orig;
-	if([[application bundleIdentifier] isEqualToString:@"com.apple.camera"] && ![prevBundle isEqualToString:@"com.apple.camera"]) {
-		brightnessLevel = [[%c(UIScreen) mainScreen] brightness];
-		[[%c(SBBrightnessController) sharedBrightnessController] setBrightnessLevel:1.0];
-	} else if([prevBundle isEqualToString:@"com.apple.camera"]) {
-		[[%c(SBBrightnessController) sharedBrightnessController] setBrightnessLevel:brightnessLevel];
-	}
+	// Add listeners for when the app opens/closes
+	[[NSNotificationCenter defaultCenter] addObserver:self
+        selector:@selector(camClosed) 
+        name:UIApplicationWillResignActiveNotification
+        object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+        selector:@selector(camClosed) 
+        name:UIApplicationWillTerminateNotification
+        object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+        selector:@selector(camOpened) 
+        name:UIApplicationDidBecomeActiveNotification
+        object:nil];
+}
 
-	prevBundle = [application bundleIdentifier];
+%new
+-(void) camOpened {
+	double sBrightness = [[%c(UIScreen) mainScreen] brightness];
+	if(sBrightness < 1.0)
+		brightnessLevel = sBrightness;
+	[%c(UIScreen) mainScreen].brightness = 1.0;
+}
+
+%new
+-(void) camClosed {
+	[%c(UIScreen) mainScreen].brightness = brightnessLevel;
 }
 
 %end
@@ -36,7 +49,10 @@ static NSString* prevBundle;
 
 -(void)viewDidAppear:(BOOL)arg1 {
 	%orig;
-	brightnessLevel = [[%c(UIScreen) mainScreen] brightness];
+	double sBrightness = [[%c(UIScreen) mainScreen] brightness];
+	if(sBrightness < 1.0)
+		brightnessLevel = sBrightness;
+	// For some reason, SBBrightnessController has to be used on the LS version instead
 	[[%c(SBBrightnessController) sharedBrightnessController] setBrightnessLevel:1.0];
 }
 
@@ -48,7 +64,7 @@ static NSString* prevBundle;
 %end
 
 // Initialize globals
-%hook SBDashBoardViewController
+%hook CSCoverSheetViewController
 -(void)viewDidLoad {
 	%orig;
 	brightnessLevel = [[%c(UIScreen) mainScreen] brightness];

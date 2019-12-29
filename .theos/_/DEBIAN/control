@@ -6,5 +6,5 @@ Description: Turns screen brightness to 100% when the camera app is opened.
 Maintainer: ckosmic
 Author: ckosmic
 Section: Tweaks
-Version: 0.0.1
-Installed-Size: 120
+Version: 0.0.2-98+debug
+Installed-Size: 124
