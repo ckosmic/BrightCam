@@ -1,10 +1,11 @@
 Package: com.ckosmic.brightcam
 Name: BrightCam
-Depends: mobilesubstrate
 Architecture: iphoneos-arm
 Description: Turns screen brightness to 100% when the camera app is opened.
-Maintainer: ckosmic
-Author: ckosmic
+Maintainer: Christian Kosman <support@tripleaxis.net>
+Author: Christian Kosman <support@tripleaxis.net>
 Section: Tweaks
-Version: 0.0.2-98+debug
-Installed-Size: 124
+Depends: mobilesubstrate
+Depiction: https://ckosmic.github.io/repo/depictions/?p=com.ckosmic.brightcam
+Version: 0.1.1
+Installed-Size: 200
